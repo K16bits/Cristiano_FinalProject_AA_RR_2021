@@ -24,25 +24,49 @@ filaP* iniciaFila(){
 int parent(int i){return (i-1)/2;}
 int left(int i){return (i*2+1);}
 int rigth(int i){ return (i*2+2);}
-void troca(int *a, int *b) {
-    int aux;
-    aux = *a;
-    *a = *b;
-    *b = aux;
-}
 
-node* initNode(char caractere){
+node* criarNode(int caractere,int frequencia){
     node* root = malloc(sizeof(node));
-    root->caractere = caractere;
+    root->caractere = (char)caractere;
+    root->frequencia = frequencia;
     root->esq = root->dir = NULL;
     return root;
 }
 
-int pegandoFrequencias(int vetorMvetorFrequencia[],char vetor[], int tam){
+void MinHeapify(filaP* f,int pos){
+    int esq = left(pos);
+    int dir = rigth(pos);
+    int menor = pos;
+
+    if(esq < f->tamanhoHeap && f->vetor[esq]->frequencia < f->vetor[pos]->frequencia)
+        menor = esq;
+
+    if(dir < f->tamanhoHeap && f->vetor[dir]->frequencia < f->vetor[menor]->frequencia)
+        menor = dir;
+    
+    node* aux;
+    if(menor != pos){
+        aux = f->vetor[pos];
+        f->vetor[pos] = f->vetor[menor];
+        f->vetor[menor] = aux;
+        MinHeapify(f,menor);
+    }
+}
+
+node* extraindoMinFila(filaP *f){ 
+    node* aux;
+    aux = f->vetor[0];
+    f->vetor[0] = f->vetor[f->tamanhoHeap-1];
+    f->tamanhoHeap--;
+
+    MinHeapify(f,0); // falha aqui
+    return aux;
+}
+
+int pegandoFrequencias(int vetorFrequencia[],char vetor[], int tam){
     for(int i = 0;i < tam;i++){
         int x = (int)vetor[i];
-        vetorMvetorFrequencia[x]++;
-        //printf(" - %d",x);
+        vetorFrequencia[x]++;
     }
 }
 
@@ -50,24 +74,33 @@ void adicionarNaFila(filaP* f,node* root){
     f->tamanhoHeap++;
     int pos = f->tamanhoHeap-1;
 
-    while (pos>=0 && f->vetor[parent(pos)]->frequencia > root->frequencia) {
+    while (pos > 0 && f->vetor[parent(pos)]->frequencia > root->frequencia) {
         f->vetor[pos] = f->vetor[parent(pos)];
         pos = parent(pos);
-    } 
+    }
+
     f->vetor[pos] = root;
 }
 
-node* criarHuffman(int* vetorFrequencia[]){
+node* criarHuffman(int vetorFrequencia[]){
     filaP* f = iniciaFila();
-    printf("%d",f->tamanhoHeap);
+    for(int i = 0; i < N_ASCII;i++){
+        if(vetorFrequencia[i] != 0){
+            node* auxNode = criarNode(i,vetorFrequencia[i]); 
+            adicionarNaFila(f,auxNode);
+        }
+    }
+    
 }
 
 int main(){
     int vetorFrequencia[N_ASCII];
-    char teste[5] = {'a','b','c','a','a'};
+
+    char teste[] = {'a','b','c','a','a','f'};
+
     int tamVetor = sizeof(teste)/sizeof(teste[0]);
     memset(vetorFrequencia,0,sizeof(vetorFrequencia));
     pegandoFrequencias(vetorFrequencia,teste,tamVetor);
 
-    //printf("posi - N 97: %d",vetorFrequencia[97]);
+    criarHuffman(vetorFrequencia);
 }
